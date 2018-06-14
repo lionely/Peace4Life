@@ -1,7 +1,11 @@
 import urllib2
 from bs4 import BeautifulSoup
 from dog import *
+
 def download_file(url,file_name):
+    """
+    This takes a url and saves the file to disk.
+    """
     #http://stackabuse.com/download-files-with-python/
     filedata = urllib2.urlopen(url)
     datatowrite = filedata.read()
@@ -9,10 +13,7 @@ def download_file(url,file_name):
         f.write(datatowrite)
 
 #TODO After scraping all dog text, maybe look at on average in data where the name might be?
-url = 'http://cafe.naver.com/ArticleList.nhn?search.clubid=26290786&search.menuid=32&search.boardtype=I'
-#'https://cafe.naver.com/forewl.cafe'
 def getHomePageDogs(url,limit=None):
-    #TODO filter out images in the result set, that aren't dogs. What is a 'dog'?
     """
     This is a function which takes a url, and scrapes the pictures and links to biographies
     of dogs on the homepage of Empathy for Life and returns it as a list of dogs.
@@ -22,8 +23,7 @@ def getHomePageDogs(url,limit=None):
     soup_ul = BeautifulSoup(page,'lxml').find('ul','article-album-sub border-sub')#specifiy parser "lxml"
     soup_a = soup_ul.findAll('a') #This has the link to a dog's page on naver and picture
     soup_dl = soup_ul.findAll('dt')#.a['title']#this will be used to dog dog name
-    # print len(soup_a)
-    # print len(soup_dl)
+
     # For dog(a), get the text,get it's image and assign it a name
     # A Dog eventually needs to be (guid,name,description)
     count = 0
@@ -42,11 +42,18 @@ def getHomePageDogs(url,limit=None):
             dog = Dog(guid,dog_name,dog_description[:10])
             dogs_scraped.append(dog)
             count+=1
-            if count==6:
+            if count==1:
                 break
-    #print len(soup_dl)
     return dogs_scraped
-    
+
+def get_catalog_pages(url):
+    href_begin = 'http://cafe.naver.com/'
+    page = urllib2.urlopen(url)
+    catalog_pages_navi = BeautifulSoup(page,'lxml').find('div','prev-next').find('table','Nnavi')
+    catalog_pages = [href_begin+cat.a['href'] for cat in catalog_pages_navi.findAll('td')]
+    #print len(catalog_pages)
+    return catalog_pages
+
 #TODO figure out how to scrape until the end of the page.
 def getDogText(url):
     page = urllib2.urlopen(url)
@@ -64,5 +71,10 @@ def getDogText(url):
     text = '\n'.join(chunk for chunk in chunks if chunk)
     return text
 
-
-#homepage_dogs = getHomePageDogs(url)
+def get_dog_from_each_home_page(url):
+    dog_list = []
+    for catalog in get_catalog_pages(url):
+        dog_list+=getHomePageDogs(catalog)
+    return dog_list
+# url = 'http://cafe.naver.com/ArticleList.nhn?search.clubid=26290786&search.menuid=32&search.boardtype=I'
+# print len(get_dog_from_each_home_page(url))
