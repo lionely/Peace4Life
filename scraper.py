@@ -46,6 +46,7 @@ def getHomePageDogs(url,limit=None):
                 break
     #print len(soup_dl)
     return dogs_scraped
+    
 #TODO figure out how to scrape until the end of the page.
 def getDogText(url):
     page = urllib2.urlopen(url)
