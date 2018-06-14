@@ -65,10 +65,18 @@ def test_get_primary_key():
     pass
 
 def run_tests():
+    passed = False
     test_dogs = create_test_dogs()
     insert_test_dogs(test_dogs)
     delete_test_dogs(test_dogs)
+    passed = True
+    assert(passed)
+    print('Passed tests.')
 
+def main():
+    db_connector.establish_link()
+    run_tests()
+    db_connector.disconnect_link()
 
 if __name__ == "__main__":
     db_connector.establish_link()
