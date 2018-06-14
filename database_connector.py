@@ -6,7 +6,6 @@ class DbConnector(object):
     This class uses mysql connector to connect to our WordPress database
     and then inserts/updates it.
     """
-
     def __init__(self,config):
         self.config = config
 
@@ -22,8 +21,6 @@ class DbConnector(object):
     def commit_link(self):
         # Make sure data is committed to the database
         self.link.commit()
-
-
 
     def get_primary_key(self,guid):
         """
@@ -42,8 +39,8 @@ class DbConnector(object):
         """
         #https://stackoverflow.com/questions/4253960/sql-how-to-properly-check-if-a-record-exists
         query = ("SELECT guid FROM wp_posts WHERE guid = %(guid)s")
-        cursor.execute(query,{ 'guid': guid })
-        result_set = [result[0] for result in cursor]
+        self.cursor.execute(query,{ 'guid': guid })
+        result_set = [result[0] for result in self.cursor]
         num_results = len(result_set)
         if num_results == 0:
             return None
@@ -91,7 +88,7 @@ class DbConnector(object):
         term_relationship_tag_data = (object_id,23,0)
         self.cursor.execute(add_term_relationship_tag, term_relationship_tag_data)
         self.insert_pict_post(dog)
-        print("New dog inserted!")
+        #print("New dog inserted!")
 
     def insert_pict_post(self,dog):
         today = strftime("%Y-%m-%d %H:%M:%S", gmtime())
@@ -124,9 +121,8 @@ class DbConnector(object):
         add_picture_meta = ("INSERT INTO wp_postmeta"
         "(post_id, meta_key , meta_value) "
         "VALUES (%s,%s,%s)")
-        picture_row_data = (object_meta_value,'_wp_attached_file','dogs/test_dog.jpg')
+        picture_row_data = (object_meta_value,'_wp_attached_file','dogs/'+str(dog.name)+'.jpg')
         self.cursor.execute(add_picture_meta, picture_row_data)
-
 
     #TODO update Test dog with a description and a picture
     #TODO this should take a guid
@@ -135,9 +131,17 @@ class DbConnector(object):
         """
         To insert a dog, we need atleast post_content,post_excerpt,to_ping,pinged and post_content_filtered
         """
-        update_query = ("UPDATE wp_posts SET post_content = %(post_content)s \
+        update_post_content = ("UPDATE wp_posts SET post_content = %(post_content)s \
                     WHERE guid = %(guid)s ")
-        self.cursor.execute(update_query, { 'post_content':dog.description,'guid': dog.guid})
+        self.cursor.execute(update_post_content, { 'post_content':dog.description,'guid': dog.guid})
+
+        object_meta_value = self.get_primary_key(dog.guid+"_picture")
+        update_picture_meta = ("UPDATE wp_postmeta SET meta_value = %(meta_value)s\
+        WHERE post_id=%(post_id)s and meta_key=%(meta_key)s")
+        picture_row_data = ('dogs/'+str(dog.name)+'.jpg',object_meta_value,'_wp_attached_file')
+        self.cursor.execute(update_picture_meta, {'meta_value':picture_row_data[0],
+        'post_id':picture_row_data[1],
+        'meta_key':picture_row_data[2]})
         print("Dog updated!")
 
     def create_or_update(self,dog):
@@ -146,8 +150,8 @@ class DbConnector(object):
         we may update the entry. The difference is determined by if the post_content
         is different.
         """
-        dog_guid = find_existing_dog(dog.guid)
+        dog_guid = self.find_existing_dog(dog.guid)
         if dog_guid:
-            update_dog(guid)
+            self.update_dog(dog)
         else:
-            insert_dog(dog)
+            self.insert_dog(dog)
