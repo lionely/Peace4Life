@@ -17,7 +17,7 @@ if __name__ == "__main__":
     db_test.main()
     db_connector = db.DbConnector(config)
     db_connector.establish_link()
-    dogs = sc.getHomePageDogs(url)
+    dogs = sc.get_dog_from_each_home_page(url)
     for dog in dogs:
         db_connector.create_or_update(dog)
         db_connector.commit_link()
