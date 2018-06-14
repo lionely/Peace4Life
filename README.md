@@ -5,3 +5,6 @@ decreasing the number of dogs euthanized in South Korea.
 ## Dependencies
 * WordPress
 * MySQL Connector
+
+## Shoutouts!
+* [Paul Cantrell](https://github.com/pcantrell)
